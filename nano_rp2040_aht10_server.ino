@@ -99,7 +99,6 @@ void handleClientRequests(float temperatureCelsius, float humidity) {
   }
 }
 
-// Monitor Function
 void initiateMonitoring(bool monitor) {
   if (monitor == 1) {
     Serial.begin(9600);
@@ -107,7 +106,6 @@ void initiateMonitoring(bool monitor) {
   }
 }
 
-// Sensor Function
 void initiateTemperatureSensor() {
   setLED(YELLOW); monitorln("Initializing AHT10/AHT20...");
   if (! aht.begin()) {
