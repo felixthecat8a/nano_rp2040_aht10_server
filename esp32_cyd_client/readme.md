@@ -12,4 +12,4 @@
 
 Note: Add [`lv_conf.h`](LVGL/lv_conf.h) manually to your Arduino libraries folder. 
 
-Note: Replace or edit [`User_Setup.h`](TFT_eSPI/User_Setup.h) to match your display configuration. 
+Note: Replace or edit [`User_Setup.h`](TFT_eSPI/User_Setup.h) in the TFT_eSPI library to match your display configuration. 
