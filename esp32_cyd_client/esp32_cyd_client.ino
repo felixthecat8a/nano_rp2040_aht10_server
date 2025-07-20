@@ -194,9 +194,9 @@ void fetch_and_update_ui() {
 
       // Arc color based on hum
       lv_color_t hum_color;
-      if (hum <= 40)       hum_color = lv_palette_main(LV_PALETTE_PURPLE);
+      if (hum <= 40)       hum_color = lv_palette_main(LV_PALETTE_DEEP_ORANGE);
       else if (hum <= 60)  hum_color = lv_palette_main(LV_PALETTE_DEEP_PURPLE);
-      else                  hum_color = lv_palette_main(LV_PALETTE_DEEP_ORANGE);
+      else                  hum_color = lv_palette_main(LV_PALETTE_PURPLE);
 
       lv_obj_set_style_arc_color(arc_hum, hum_color, LV_PART_INDICATOR);
       lv_obj_set_style_text_color(label_hum, hum_color, 0);
