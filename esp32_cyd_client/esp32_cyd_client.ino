@@ -5,48 +5,43 @@
 #include <TFT_eSPI.h>
 #include "secrets.h"
 
-// Main Loop Interval
+// Loop Interval
 unsigned long lastFetch = 0;
 const unsigned long fetchInterval = 10000;
 
-// Wi-Fi credentials (connect to Nano RP2040 AP)
+// Wi-Fi credentials
 const char* ssid = ARDUINO_ACCESS_POINT_SSID;
 const char* password = ARDUINO_ACCESS_POINT_PASS;
 
-// Weather JSON endpoint
+// JSON endpoint
 const char* jsonURL = "http://192.168.4.1/";
 
-// Display dimensions
+// Display config
 #define SCREEN_WIDTH  240
 #define SCREEN_HEIGHT 320
 #define DRAW_BUF_SIZE (SCREEN_WIDTH * SCREEN_HEIGHT / 10 * (LV_COLOR_DEPTH / 8))
-uint32_t draw_buf[DRAW_BUF_SIZE / 4];
+uint16_t draw_buf[DRAW_BUF_SIZE / 2];
 
 // UI elements
-lv_obj_t* disp_title;
+lv_obj_t* arc_temp;
 lv_obj_t* label_temp;
-lv_obj_t* label_humidity;
+lv_obj_t* arc_hum;
+lv_obj_t* label_hum;
 lv_obj_t* label_status;
 
 // Connect to WiFi
 void connectWiFi() {
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi");
-
   unsigned long startAttempt = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - startAttempt < 10000) {
     delay(500);
     Serial.print(".");
   }
-
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println(" connected!");
-  } else {
-    Serial.println(" failed!");
-  }
+  if (WiFi.status() == WL_CONNECTED) Serial.println(" connected!");
+  else Serial.println(" failed!");
 }
 
-// Reconnect if needed
 void ensureWiFiConnected() {
   if (WiFi.status() != WL_CONNECTED) {
     lv_label_set_text(label_status, "Status: Reconnecting WiFi...");
@@ -54,49 +49,100 @@ void ensureWiFiConnected() {
   }
 }
 
-// Setup UI with LVGL
+// Create UI
 void create_display_ui() {
-  // Title
-  disp_title = lv_label_create(lv_scr_act());
-  lv_label_set_text(disp_title, "device / sensor");
-  lv_obj_align(disp_title, LV_ALIGN_TOP_MID, 0, 10);
-  static lv_style_t style_title;
-  lv_style_init(&style_title);
-  lv_style_set_text_font(&style_title, &lv_font_montserrat_24);
-  lv_obj_add_style(disp_title, &style_title, 0);
-  lv_obj_set_style_text_color(disp_title, lv_palette_main(LV_PALETTE_TEAL), 0);
+  // ========== Temperature Container ==========
+  lv_obj_t* cont_temp = lv_obj_create(lv_scr_act());
+  lv_obj_set_size(cont_temp, 175, 210);
+  lv_obj_align(cont_temp, LV_ALIGN_LEFT_MID, 5, -5);
+  lv_obj_set_style_pad_all(cont_temp, 10, 0);
+  lv_obj_set_style_radius(cont_temp, 10, 0);
+  lv_obj_set_style_bg_color(cont_temp, lv_color_hex(0xfefefe), 0);
+  lv_obj_set_style_border_width(cont_temp, 0, 0);
 
-  // Temperature Label
-  label_temp = lv_label_create(lv_scr_act());
-  lv_label_set_text(label_temp, "Temp: -- °F");
-  lv_obj_align(label_temp, LV_ALIGN_CENTER, 0, -30);
-  static lv_style_t style_temp;
-  lv_style_init(&style_temp);
-  lv_style_set_text_font(&style_temp, &lv_font_montserrat_22);
-  lv_obj_add_style(label_temp, &style_temp, 0);
+  // Temp Title
+  lv_obj_t* title_temp = lv_label_create(cont_temp);
+  lv_label_set_text(title_temp, "Temperature");
+  lv_obj_align(title_temp, LV_ALIGN_TOP_MID, 0, 0);
+  static lv_style_t style_title_temp;
+  lv_style_init(&style_title_temp);
+  lv_style_set_text_font(&style_title_temp, &lv_font_montserrat_24);
+  lv_obj_add_style(title_temp, &style_title_temp, 0);
+  lv_obj_set_style_text_color(title_temp, lv_palette_main(LV_PALETTE_TEAL), 0);
+
+  // Temperature Arc
+  arc_temp = lv_arc_create(cont_temp);
+  lv_obj_set_size(arc_temp, 150, 150);
+  lv_obj_align(arc_temp, LV_ALIGN_CENTER, 0, 20);
+  lv_arc_set_rotation(arc_temp, 135);
+  lv_arc_set_bg_angles(arc_temp, 0, 270);
+  lv_arc_set_range(arc_temp, -4, 104);
+  lv_arc_set_value(arc_temp, 0);
+  lv_obj_set_style_arc_color(arc_temp, lv_color_hex(0x666666), LV_PART_INDICATOR);
+  lv_obj_set_style_bg_color(arc_temp, lv_color_hex(0x333333), LV_PART_KNOB);
+  lv_obj_remove_style(arc_temp, NULL, LV_PART_KNOB);
+
+  // Temp Value Label (inside arc)
+  label_temp = lv_label_create(cont_temp);
+  lv_label_set_text(label_temp, "-- °F");
+  lv_obj_align(label_temp, LV_ALIGN_CENTER, 0, 20);
+  static lv_style_t style_arc_temp_text;
+  lv_style_init(&style_arc_temp_text);
+  lv_style_set_text_font(&style_arc_temp_text, &lv_font_montserrat_28);
+  lv_obj_add_style(label_temp, &style_arc_temp_text, 0);
+
+  // ========== Humidity Container ==========
+  lv_obj_t* cont_hum = lv_obj_create(lv_scr_act());
+  lv_obj_set_size(cont_hum, 130, 180);
+  lv_obj_align(cont_hum, LV_ALIGN_RIGHT_MID, -5, -5);
+  lv_obj_set_style_pad_all(cont_hum, 10, 0);
+  lv_obj_set_style_radius(cont_hum, 10, 0);
+  lv_obj_set_style_bg_color(cont_hum, lv_color_hex(0xfefefe), 0);
+  lv_obj_set_style_border_width(cont_hum, 0, 0);
+
+  // Humidity Title
+  lv_obj_t* title_hum = lv_label_create(cont_hum);
+  lv_label_set_text(title_hum, "Humidity");
+  lv_obj_align(title_hum, LV_ALIGN_TOP_MID, 0, 0);
+  static lv_style_t style_title_hum;
+  lv_style_init(&style_title_hum);
+  lv_style_set_text_font(&style_title_hum, &lv_font_montserrat_22);
+  lv_obj_add_style(title_hum, &style_title_hum, 0);
+  lv_obj_set_style_text_color(title_hum, lv_palette_main(LV_PALETTE_DEEP_PURPLE), 0);
+
+  // Humidity Arc (smaller)
+  arc_hum = lv_arc_create(cont_hum);
+  lv_obj_set_size(arc_hum, 110, 110);  // Smaller arc
+  lv_obj_align(arc_hum, LV_ALIGN_CENTER, 0, 15);
+  lv_arc_set_rotation(arc_hum, 135);
+  lv_arc_set_bg_angles(arc_hum, 0, 270);
+  lv_arc_set_range(arc_hum, 0, 100);
+  lv_arc_set_value(arc_hum, 0);
+  lv_obj_set_style_arc_color(arc_hum, lv_color_hex(0x666666), LV_PART_INDICATOR);
+  lv_obj_set_style_bg_color(arc_hum, lv_color_hex(0x333333), LV_PART_KNOB);
+  lv_obj_remove_style(arc_hum, NULL, LV_PART_KNOB);
 
   // Humidity Label
-  label_humidity = lv_label_create(lv_scr_act());
-  lv_label_set_text(label_humidity, "Humidity: -- %");
-  lv_obj_align(label_humidity, LV_ALIGN_CENTER, 0, 30);
+  label_hum = lv_label_create(cont_hum);
+  lv_label_set_text(label_hum, "-- %");
+  lv_obj_align(label_hum, LV_ALIGN_CENTER, 0, 15);
   static lv_style_t style_hum;
   lv_style_init(&style_hum);
-  lv_style_set_text_font(&style_hum, &lv_font_montserrat_22);
-  lv_obj_add_style(label_humidity, &style_hum, 0);
-  lv_obj_set_style_text_color(label_humidity, lv_palette_main(LV_PALETTE_BLUE_GREY), 0);
+  lv_style_set_text_font(&style_hum, &lv_font_montserrat_18);
+  lv_obj_add_style(label_hum, &style_hum, 0);
+  lv_obj_set_style_text_color(label_hum, lv_palette_main(LV_PALETTE_DEEP_PURPLE), 0);
 
-  // Status Label
+  // Status label (outside of both containers)
   label_status = lv_label_create(lv_scr_act());
   lv_label_set_text(label_status, "Status: Ready");
-  lv_obj_align(label_status, LV_ALIGN_BOTTOM_MID, 0, -10);
+  lv_obj_align(label_status, LV_ALIGN_BOTTOM_MID, 0, -5);
   static lv_style_t style_status;
   lv_style_init(&style_status);
-  lv_style_set_text_font(&style_status, &lv_font_montserrat_12);
+  lv_style_set_text_font(&style_status, &lv_font_montserrat_10);
   lv_obj_add_style(label_status, &style_status, 0);
-  lv_obj_set_style_text_color(label_status, lv_palette_main(LV_PALETTE_GREY), 0);
 }
 
-// Fetch JSON and update UI
+// Update UI with fetched JSON
 void fetch_and_update_ui() {
   ensureWiFiConnected();
   lv_label_set_text(label_status, "Status: Fetching...");
@@ -108,69 +154,81 @@ void fetch_and_update_ui() {
 
   if (code == 200) {
     String payload = http.getString();
-    Serial.println("Response: " + payload);
+    Serial.println(payload);  // for debug
 
-    JsonDocument doc;
+    StaticJsonDocument<256> doc;
     DeserializationError err = deserializeJson(doc, payload);
-    
-    if (!err && doc["temperature"].is<float>() && doc["humidity"].is<float>()) {
-      const char* device = doc["device"] | "Unknown";
-      const char* sensor = doc["sensor"] | "Unknown";
 
-      lv_label_set_text_fmt(disp_title, "%s / %s", device, sensor);
 
+    if (!err && doc.containsKey("temperature") && doc.containsKey("humidity")) {
       float temp = doc["temperature"];
       float hum = doc["humidity"];
-      Serial.printf("Fetched: %.1f°F, %.1f%%\n", temp, hum);
 
-      lv_label_set_text_fmt(label_temp, "Temp: %.1f °F", temp);
-      lv_label_set_text_fmt(label_humidity, "Humidity: %.1f %%", hum);
-      lv_label_set_text(label_status, "Status: OK");
+      // Update Temperature
+      lv_label_set_text_fmt(label_temp, "%.1f°F", temp);
+      lv_arc_set_value(arc_temp, temp);
 
-      lv_color_t color;
+      // Arc color based on temp
+      lv_color_t temp_color;
       int ROOM_TEMP = 72;
-      if (temp <= ROOM_TEMP - 15)       color = lv_palette_main(LV_PALETTE_DEEP_PURPLE);
-      else if (temp <= ROOM_TEMP - 12)   color = lv_palette_main(LV_PALETTE_INDIGO);
-      else if (temp <= ROOM_TEMP - 9)   color = lv_palette_main(LV_PALETTE_BLUE);
-      else if (temp <= ROOM_TEMP - 6)   color = lv_palette_main(LV_PALETTE_LIGHT_BLUE);
-      else if (temp <= ROOM_TEMP -3)    color = lv_palette_main(LV_PALETTE_CYAN);
-      else if (temp <= ROOM_TEMP)       color = lv_palette_main(LV_PALETTE_GREEN);
-      else if (temp <= ROOM_TEMP + 3)   color = lv_palette_main(LV_PALETTE_LIGHT_GREEN);
-      else if (temp <= ROOM_TEMP + 6)   color = lv_palette_main(LV_PALETTE_LIME);
-      else if (temp <= ROOM_TEMP + 9)   color = lv_palette_main(LV_PALETTE_YELLOW);
-      else if (temp <= ROOM_TEMP + 12)  color = lv_palette_main(LV_PALETTE_AMBER);
-      else if (temp <= ROOM_TEMP + 15)  color = lv_palette_main(LV_PALETTE_ORANGE);
-      else if (temp <= ROOM_TEMP + 18)  color = lv_palette_main(LV_PALETTE_RED);
-      else                              color = lv_palette_main(LV_PALETTE_PINK);
+      if (temp <= ROOM_TEMP - 15)       temp_color = lv_palette_main(LV_PALETTE_PURPLE);
+      else if (temp <= ROOM_TEMP - 12)  temp_color = lv_palette_main(LV_PALETTE_INDIGO);
+      else if (temp <= ROOM_TEMP - 9)   temp_color = lv_palette_main(LV_PALETTE_BLUE);
+      else if (temp <= ROOM_TEMP - 6)   temp_color = lv_palette_main(LV_PALETTE_LIGHT_BLUE);
+      else if (temp <= ROOM_TEMP -3)    temp_color = lv_palette_main(LV_PALETTE_CYAN);
+      else if (temp <= ROOM_TEMP)       temp_color = lv_palette_main(LV_PALETTE_GREEN);
+      else if (temp <= ROOM_TEMP + 3)   temp_color = lv_palette_main(LV_PALETTE_LIGHT_GREEN);
+      else if (temp <= ROOM_TEMP + 6)   temp_color = lv_palette_main(LV_PALETTE_LIME);
+      else if (temp <= ROOM_TEMP + 9)   temp_color = lv_palette_main(LV_PALETTE_YELLOW);
+      else if (temp <= ROOM_TEMP + 12)  temp_color = lv_palette_main(LV_PALETTE_AMBER);
+      else if (temp <= ROOM_TEMP + 15)  temp_color = lv_palette_main(LV_PALETTE_ORANGE);
+      else if (temp <= ROOM_TEMP + 18)  temp_color = lv_palette_main(LV_PALETTE_RED);
+      else                              temp_color = lv_palette_main(LV_PALETTE_PINK);
 
-      lv_obj_set_style_text_color(label_temp, color, 0);
+      lv_obj_set_style_arc_color(arc_temp, temp_color, LV_PART_INDICATOR);
+      lv_obj_set_style_text_color(label_temp, temp_color, 0);
+
+      // Update Humidity
+      lv_label_set_text_fmt(label_hum, "%.1f %%", hum);
+      lv_arc_set_value(arc_hum, hum);
+
+      // Arc color based on hum
+      lv_color_t hum_color;
+      if (temp <= 40)       hum_color = lv_palette_main(LV_PALETTE_PURPLE);
+      else if (temp <= 60)  hum_color = lv_palette_main(LV_PALETTE_DEEP_PURPLE);
+      else                  hum_color = lv_palette_main(LV_PALETTE_DEEP_ORANGE);
+
+      lv_obj_set_style_arc_color(arc_hum, hum_color, LV_PART_INDICATOR);
+      lv_obj_set_style_text_color(label_hum, hum_color, 0);
+
+      // Update Status
+      lv_label_set_text(label_status, "Status: OK");
     } else {
-      Serial.println("JSON parse error or missing keys");
       lv_label_set_text_fmt(label_status, "Status: JSON error: %s", err.c_str());
     }
   } else {
-    Serial.printf("HTTP error: %d\n", http.errorToString(code));
+    Serial.print("HTTP Error: ");
+    Serial.println(http.errorToString(code));
     lv_label_set_text_fmt(label_status, "Status: HTTP error %d", code);
   }
 
   http.end();
 }
 
-// Arduino setup
+// Setup
 void setup() {
   Serial.begin(115200);
   connectWiFi();
 
   lv_init();
 
-  // Display setup
+  // Display
   lv_display_t* disp = lv_tft_espi_create(SCREEN_WIDTH, SCREEN_HEIGHT, draw_buf, sizeof(draw_buf));
-  lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_270);  // Adjust as needed
+  lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_270);
 
   create_display_ui();
 }
 
-// Main loop
 void loop() {
   lv_task_handler();
   lv_tick_inc(5);
