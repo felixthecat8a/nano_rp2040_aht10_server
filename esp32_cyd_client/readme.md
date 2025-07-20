@@ -4,5 +4,5 @@
 - WiFi
 - HTTPClient
 - ArduinoJson
-- LVGL
-- TFT_eSPI
+- LVGL (Add lv_conf.h to Arduino Library Folder)
+- TFT_eSPI (Update or Replace User_Setup.h)
