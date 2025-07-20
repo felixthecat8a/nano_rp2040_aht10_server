@@ -55,7 +55,7 @@ void create_display_ui() {
   lv_obj_t* cont_temp = lv_obj_create(lv_scr_act());
   lv_obj_set_size(cont_temp, 175, 210);
   lv_obj_align(cont_temp, LV_ALIGN_LEFT_MID, 5, -5);
-  lv_obj_set_style_pad_all(cont_temp, 10, 0);
+  lv_obj_set_style_pad_all(cont_temp, 5, 0);
   lv_obj_set_style_radius(cont_temp, 10, 0);
   lv_obj_set_style_bg_color(cont_temp, lv_color_hex(0xfefefe), 0);
   lv_obj_set_style_border_width(cont_temp, 0, 0);
@@ -88,14 +88,14 @@ void create_display_ui() {
   lv_obj_align(label_temp, LV_ALIGN_CENTER, 0, 20);
   static lv_style_t style_arc_temp_text;
   lv_style_init(&style_arc_temp_text);
-  lv_style_set_text_font(&style_arc_temp_text, &lv_font_montserrat_28);
+  lv_style_set_text_font(&style_arc_temp_text, &lv_font_montserrat_30);
   lv_obj_add_style(label_temp, &style_arc_temp_text, 0);
 
   // ========== Humidity Container ==========
   lv_obj_t* cont_hum = lv_obj_create(lv_scr_act());
   lv_obj_set_size(cont_hum, 130, 180);
   lv_obj_align(cont_hum, LV_ALIGN_RIGHT_MID, -5, -5);
-  lv_obj_set_style_pad_all(cont_hum, 10, 0);
+  lv_obj_set_style_pad_all(cont_hum, 5, 0);
   lv_obj_set_style_radius(cont_hum, 10, 0);
   lv_obj_set_style_bg_color(cont_hum, lv_color_hex(0xfefefe), 0);
   lv_obj_set_style_border_width(cont_hum, 0, 0);
@@ -194,8 +194,8 @@ void fetch_and_update_ui() {
 
       // Arc color based on hum
       lv_color_t hum_color;
-      if (temp <= 40)       hum_color = lv_palette_main(LV_PALETTE_PURPLE);
-      else if (temp <= 60)  hum_color = lv_palette_main(LV_PALETTE_DEEP_PURPLE);
+      if (hum <= 40)       hum_color = lv_palette_main(LV_PALETTE_PURPLE);
+      else if (hum <= 60)  hum_color = lv_palette_main(LV_PALETTE_DEEP_PURPLE);
       else                  hum_color = lv_palette_main(LV_PALETTE_DEEP_ORANGE);
 
       lv_obj_set_style_arc_color(arc_hum, hum_color, LV_PART_INDICATOR);
