@@ -10,6 +10,6 @@
 | `LVGL`         | Install via Library Manager            | [GitHub](https://github.com/Bodmer/TFT_eSPI)|
 | `TFT_eSPI`     | Install via Library Manager            | [LVGL](https://lvgl.io/)                    |
 
-Note: Add [`lv_conf.h`](esp32_cyd_client/LVGL/lv_conf.h) manually to your Arduino libraries folder. 
+Note: Add [`lv_conf.h`](LVGL/lv_conf.h) manually to your Arduino libraries folder. 
 
-Note: Replace or edit [`User_Setup.h`](esp32_cyd_client/TFT_eSPI/User_Setup.h) to match your display configuration. 
+Note: Replace or edit [`User_Setup.h`](TFT_eSPI/User_Setup.h) to match your display configuration. 
