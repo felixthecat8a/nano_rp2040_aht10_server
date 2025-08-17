@@ -29,16 +29,23 @@ WiFiServer server(80);
 
 int status = WL_IDLE_STATUS;
 
+/* Monitoring Prototypes */
+void initiateMonitoring(bool monitoringActivated);
+
 /* Sensor Prototypes */
 void initialiateTemperatureSensor();
 
 /* Access Point Prototypes */
 void initiateWiFiAccessPoint();
 void checkAccessPointConnectionStatus();
+void printWifiStatusWhenReadyToConnect();
+
+/* Prototypes */
+void handleClientRequests(float temperatureCelsius, float humidity);
 
 /* Status LED Prototypes */
 void initiateLED();
-void setLED(int status);
+void setStatusLED(int status);
 
 void setup() {
   initiateLED();
@@ -99,20 +106,20 @@ void handleClientRequests(float temperatureCelsius, float humidity) {
   }
 }
 
-void initiateMonitoring(bool monitor) {
-  if (monitor == 1) {
+void initiateMonitoring(bool monitoringActivated) {
+  if (monitoringActivated == 1) {
     Serial.begin(9600);
-    while (!Serial) setLED(RED);
+    while (!Serial) setStatusLED(RED);
   }
 }
 
 void initiateTemperatureSensor() {
-  setLED(YELLOW); monitorln("Initializing AHT10/AHT20...");
+  setStatusLED(YELLOW); monitorln("Initializing AHT10/AHT20...");
   if (! aht.begin()) {
-    setLED(MAGENTA); monitorln("AHT10/AHT20 not found");
+    setStatusLED(MAGENTA); monitorln("AHT10/AHT20 not found");
     while (1) delay(10);
   }
-  setLED(CYAN); monitorln("AHT10/AHT20 found");
+  setStatusLED(CYAN); monitorln("AHT10/AHT20 found");
 }
 
 // Access Point Functions
@@ -121,19 +128,19 @@ void initiateWiFiAccessPoint() {
   char ap_pass[] = ARDUINO_ACCESS_POINT_PASS;
   status = WiFi.beginAP(ap_ssid, ap_pass);
   if (status != WL_AP_LISTENING) {
-    setLED(RED); monitorln("Access Point failed to initialize!");
+    setStatusLED(RED); monitorln("Access Point failed to initialize!");
     while (true); // access point failed
   }
-  setLED(BLUE); monitorln("Access Point awaiting connection!");
+  setStatusLED(BLUE); monitorln("Access Point awaiting connection!");
 }
 
 void checkAccessPointConnectionStatus() {
   if (status != WiFi.status()) {
     status = WiFi.status();
     if (status == WL_AP_CONNECTED) {
-      setLED(GREEN); monitorln("Device connected to AP");
+      setStatusLED(GREEN); monitorln("Device connected to AP");
     } else {
-      setLED(BLUE); monitorln("Device disconnected from AP");
+      setStatusLED(BLUE); monitorln("Device disconnected from AP");
     }
   }
 }
@@ -144,7 +151,7 @@ void initiateLED() {
   pinMode(LEDB, OUTPUT);
 }
 
-void setLED(int status) {
+void setStatusLED(int status) {
   switch (status) {
     case RED:
       digitalWrite(LEDR, HIGH);
