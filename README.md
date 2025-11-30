@@ -1,7 +1,7 @@
 # nano_rp2040_aht10_server
 JSON WiFi server for Nano RP2040 + AHT10/AHT20 that shares sensor data over AP using WiFiNINA.
 
-## 📚 Required Libraries
+## Required Libraries
 
 To compile and run this project on the Arduino Nano RP2040 Connect, you need the following libraries:
 
@@ -11,7 +11,7 @@ To compile and run this project on the Arduino Nano RP2040 Connect, you need the
 | **ArduinoJson**     | Formats the JSON response                           | Arduino Library Manager    |
 | **Adafruit AHTX0**  | Interface for AHT10 and AHT20 temperature sensors   | Arduino Library Manager    |
 
-> ⚠️ The **Adafruit AHTX0** library will also automatically install **Adafruit BusIO**, a required dependency.
+> The **Adafruit AHTX0** library will also automatically install **Adafruit BusIO**, a required dependency.
 
 ### How to Install
 
@@ -32,7 +32,7 @@ To compile and run this project on the Arduino Nano RP2040 Connect, you need the
 | **Nano Screw Terminal Adapter**    | Breaks out Nano pins into screw terminals for secure wiring          |
 | **USB-Micro Cable**                | Used to program and power the Nano RP2040 Connect                    |
 
-> 💡 Optional: You can also use a breadboard or headers depending on your project enclosure or prototyping needs.
+> Optional: You can also use a breadboard or headers depending on your project enclosure or prototyping needs.
 
 ### Sensor Wiring (AHT10/AHT20 to Nano RP2040)
 
