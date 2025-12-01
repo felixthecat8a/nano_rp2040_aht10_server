@@ -43,5 +43,5 @@ To compile and run this project on the Arduino Nano RP2040 Connect, you need the
 | SDA            | SDA (Pin 24 / D4)        |
 | SCL            | SCL (Pin 25 / D5)        |
 
-> ⚠️ **Note:** The AHT10/AHT20 operates at 3.3V logic—perfect for the RP2040.
+> **Note:** The AHT10/AHT20 operates at 3.3V logic.
 
