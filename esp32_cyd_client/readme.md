@@ -7,8 +7,8 @@
 | `WiFi`         | Built-in with ESP32 Arduino core       |                                                 |
 | `HTTPClient`   | Also part of the ESP32 Arduino core    |                                                 |
 | `ArduinoJson`  | Install via Library Manager            | [ArduinoJson](https://arduinojson.org/)         |
-| `LVGL`         | Install via Library Manager            | [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI)  |
-| `TFT_eSPI`     | Install via Library Manager            | [LVGL](https://lvgl.io/)                        |
+| `TFT_eSPI`     | Install via Library Manager            | [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI)  |
+| `LVGL`         | Install via Library Manager            | [LVGL](https://lvgl.io/)                        |
 
 Note: Add [`lv_conf.h`](LVGL/lv_conf.h) manually to your Arduino libraries folder. 
 
