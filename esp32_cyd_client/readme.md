@@ -1,4 +1,4 @@
-# 🌤️ ESP32 Temperature & Humidity Display Client with LVGL
+# ESP32 Temperature & Humidity Display Client with LVGL
 
 ## Dependencies
 
